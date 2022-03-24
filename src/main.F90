@@ -75,13 +75,11 @@ program HartreeFock
 
      call generate_2int(ao_basis,ao_integrals)
 
-     do i = 1, 50      
-      ! Form Fock(D) -> equation 3
+     do i = 1, 100     
       call give_Fmatrix(ao_integrals, coreH, D, n_AO, F)
    
-      ! Diagonolize F to C
       call solve_genev (F,S,C,eps)
-      ! Form new D from C & safe old D
+  
       D_old = D
 
       do lambda = 1, n_ao
@@ -89,10 +87,12 @@ program HartreeFock
            D(kappa,lambda) = sum(C(kappa,1:n_occ)*C(lambda,1:n_occ))
         end do
       end do
-      ! Converge?
-      !print *, check_convergence(F,D_old)
+     
 
-      print *,  sum((F*D_old) - (D_old*F))
+      if (sum((F*D_old) - (D_old*F)) /= 0) then 
+        print *, 'system converged'
+        exit
+      end if
      end do 
 
      ! Cint *, Dompute the Hartree-Fock energy (this should be modified, see the notes)
@@ -113,35 +113,67 @@ program HartreeFock
      ! This routine should be improved such that an arbitrary molecule can be given as input
      ! the coordinates below are for a be-he dimer oriented along the x-axis with a bond length of 2 au
      use molecular_structure
+     use register
+
      type(molecular_structure_t), intent(inout) :: molecule
-     real(8) :: charge(2),coord(3,2)
-     charge(1)   = 3.D0
-     charge(2)   = 2.D0
-     coord       = 0.D0
-     coord(1,2)  = 2.D0
-     call add_atoms_to_molecule(molecule,charge,coord)
+     real(8), ALLOCATABLE :: charge(:), coord(:,:)
+     real :: coor_x, coor_y, coor_z
+     integer :: number_of_atoms, i
+     character(2) :: atom_char
+
+     call set_atom_matrix()
+
+     open(unit=2, file='inputMolecule.txt', action="read")
+    
+     READ (2,*) number_of_atoms
+
+     ALLOCATE(charge(number_of_atoms))
+     ALLOCATE(coord(3, number_of_atoms))
+
+     coord = 0.D0
+
+     READ(2,*) !empty lane/not used
+
+     do i=1, number_of_atoms
+      READ (2,*) atom_char, coord(1,i), coord(2,i), coord(3,i)
+      print *, 'Read:', atom_char, coord(1,i), coord(2,i), coord(3,i)
+      
+      charge(i) = get_charge(atom_char)
+      print *, 'Charge allocated: ', charge(i)
+     end do
+  
+     call add_atoms_to_molecule(molecule, charge, coord)
    end subroutine
 
-   subroutine define_basis(ao_basis)
-    ! This routine can be extended to use better basis sets 
-    ! The coordinates of the shell centers are the nuclear coordinates
-    ! Think of a refactoring of define_molecule and define_basis to ensure consistency 
+   subroutine define_basis(molecule, ao_basis)
      use ao_basis
+     use molecular_structure
      type(basis_set_info_t), intent(inout) :: ao_basis
+     type(molecular_structure_t), intent(in) :: molecule
      type(basis_func_info_t) :: gto
-     real(8) :: h_location = 0.628736
+     real(8) :: cur_coord(3)
+     integer :: i, j, number_of_orbitals, l, exp, orbital_counter
 
-     ! C:  2 uncontracted s-funs:    l      coord          exp
-     call add_shell_to_basis(ao_basis,1,(/0.D0,0.D0,0.D0/),4.D0)
-     call add_shell_to_basis(ao_basis,1,(/0.D0,0.D0,0.D0/),4.D0)
-     call add_shell_to_basis(ao_basis,1,(/0.D0,0.D0,0.D0/),4.D0)      
-     call add_shell_to_basis(ao_basis,0,(/0.D0,0.D0,0.D0/),4.D0)
-     call add_shell_to_basis(ao_basis,0,(/0.D0,0.D0,0.D0/),1.D0)
-     ! H:  1 uncontracted s-fun:     l      coord          exp      
-     call add_shell_to_basis(ao_basis,0,(/h_location,h_location,h_location/),1.D0)
-     call add_shell_to_basis(ao_basis,0,(/-h_location,-h_location,h_location/),1.D0)
-     call add_shell_to_basis(ao_basis,0,(/-h_location,h_location,h_location/),1.D0)
-     call add_shell_to_basis(ao_basis,0,(/h_location,-h_location,-h_location/),1.D0)
+     do i=1, molecule%num_atoms
+       cur_coord = molecule%coord(:,i)
+       orbital_counter = molecule%charge(i)
+       if (orbital_counter>4) then !has p-orbitals
+         l = 1 
+         j = MOD((orbital_counter - 4),2) !returns number of used/occupied p-orbitals         
+         exp = 4 !WRONG?
+         do while (j>0)
+          call add_shell_to_basis(ao_basis,l,(cur_coord), 4.D0)
+         end do 
+       end if
+
+        l = 0 !s-orbitals
+        if (orbital_counter>2) then !add 2s
+          exp = 4
+          call add_shell_to_basis(ao_basis,l,(cur_coord), 4.D0)
+        end if
+       exp = 1
+       call add_shell_to_basis(ao_basis,l,(cur_coord), 1.D0) !pass coordintates from molecule
+     end do
    end subroutine
 
 
