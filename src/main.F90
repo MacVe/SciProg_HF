@@ -7,6 +7,7 @@ program HartreeFock
    use ao_basis
    use compute_integrals
    use diagonalization
+   use itterations
 
      implicit none
 
@@ -19,7 +20,9 @@ program HartreeFock
      integer  :: n_AO, n_occ
      integer  :: kappa, lambda
      real(8)  :: E_HF
-     real(8), allocatable :: F(:,:),V(:,:),T(:,:),S(:,:), C(:,:), eps(:), D(:,:)
+     real(8), allocatable :: F(:,:),V(:,:),T(:,:),S(:,:), C(:,:), eps(:), D(:,:), D_old(:,:), coreH(:,:)
+     integer  :: i
+     real     :: converge
 
      ! The following large array can be eliminated when Fock matrix contruction is implemented
      real(8), allocatable :: ao_integrals (:,:,:,:)
@@ -48,8 +51,11 @@ program HartreeFock
 
      ! Compute the core Hamiltonian matrix (the potential is positive, we scale with -e = -1 to get to the potential energy matrix)
      allocate (F(n_AO,n_AO))
-     F = T - V
-
+     ALLOCATE (coreH(n_AO,n_AO))
+     coreH = T - V 
+     F = coreH
+    
+     
      ! Diagonalize the Fock matrix
      allocate (C(n_AO,n_AO))
      allocate (eps(n_AO))
@@ -64,11 +70,35 @@ program HartreeFock
        end do
      end do
 
-     ! Compute the Hartree-Fock energy (this should be modified, see the notes)
-     E_HF = 2.D0 * sum(F*D)
-     allocate (ao_integrals(n_AO,n_AO,n_AO,n_AO))
+     ALLOCATE(D_old(n_AO, n_AO))
+     ALLOCATE(ao_integrals(n_AO,n_AO,n_AO,n_AO))
+
+     call generate_2int(ao_basis,ao_integrals)
+
+     do i = 1, 50      
+      ! Form Fock(D) -> equation 3
+      call give_Fmatrix(ao_integrals, coreH, D, n_AO, F)
+   
+      ! Diagonolize F to C
+      call solve_genev (F,S,C,eps)
+      ! Form new D from C & safe old D
+      D_old = D
+
+      do lambda = 1, n_ao
+        do kappa = 1, n_ao
+           D(kappa,lambda) = sum(C(kappa,1:n_occ)*C(lambda,1:n_occ))
+        end do
+      end do
+      ! Converge?
+      !print *, check_convergence(F,D_old)
+
+      print *,  sum((F*D_old) - (D_old*F))
+     end do 
+
+     ! Cint *, Dompute the Hartree-Fock energy (this should be modified, see the notes)
+     E_HF = 2.D0 * sum(coreH*D)     
      ! Compute all 2-electron integrals
-     call generate_2int (ao_basis,ao_integrals)
+     !call generate_2int (ao_basis,ao_integrals)
      do lambda = 1, n_ao
         do kappa = 1, n_ao
            E_HF = E_HF + 2.D0 *  D(kappa,lambda) * sum(D*ao_integrals(:,:,kappa,lambda))
@@ -77,7 +107,6 @@ program HartreeFock
      end do
    
      print*, "The Hartree-Fock energy:    ", E_HF
-
    end
 
    subroutine define_molecule(molecule)
@@ -86,7 +115,7 @@ program HartreeFock
      use molecular_structure
      type(molecular_structure_t), intent(inout) :: molecule
      real(8) :: charge(2),coord(3,2)
-     charge(1)   = 4.D0
+     charge(1)   = 3.D0
      charge(2)   = 2.D0
      coord       = 0.D0
      coord(1,2)  = 2.D0
@@ -100,11 +129,20 @@ program HartreeFock
      use ao_basis
      type(basis_set_info_t), intent(inout) :: ao_basis
      type(basis_func_info_t) :: gto
-     ! Be:  2 uncontracted s-funs:    l      coord          exp      
+     real(8) :: h_location = 0.628736
+
+     ! C:  2 uncontracted s-funs:    l      coord          exp
+     call add_shell_to_basis(ao_basis,1,(/0.D0,0.D0,0.D0/),4.D0)
+     call add_shell_to_basis(ao_basis,1,(/0.D0,0.D0,0.D0/),4.D0)
+     call add_shell_to_basis(ao_basis,1,(/0.D0,0.D0,0.D0/),4.D0)      
      call add_shell_to_basis(ao_basis,0,(/0.D0,0.D0,0.D0/),4.D0)
      call add_shell_to_basis(ao_basis,0,(/0.D0,0.D0,0.D0/),1.D0)
-     ! He:  1 uncontracted s-fun:     l      coord          exp      
-     call add_shell_to_basis(ao_basis,0,(/2.D0,0.D0,0.D0/),1.D0)
+     ! H:  1 uncontracted s-fun:     l      coord          exp      
+     call add_shell_to_basis(ao_basis,0,(/h_location,h_location,h_location/),1.D0)
+     call add_shell_to_basis(ao_basis,0,(/-h_location,-h_location,h_location/),1.D0)
+     call add_shell_to_basis(ao_basis,0,(/-h_location,h_location,h_location/),1.D0)
+     call add_shell_to_basis(ao_basis,0,(/h_location,-h_location,-h_location/),1.D0)
    end subroutine
 
-   
+
+ 
