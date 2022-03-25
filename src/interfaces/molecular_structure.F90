@@ -47,6 +47,10 @@
           molecule%charge = charge_new
           molecule%coord  = coord_new
 
+          
+          ! set number of atoms
+          molecule%num_atoms = molecule%num_atoms + num_atoms_new
+
           ! local allocatable arrays should be destroyed automatically, but just to make sure
           deallocate (charge_new)
           deallocate (coord_new)
