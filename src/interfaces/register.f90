@@ -10,7 +10,7 @@ module register
         integer :: s_orbital_e, p_orbital_e
     end type 
 
-    type(atom_data), DIMENSION(10) :: atom_matrix 
+    type(atom_data), DIMENSION(20) :: atom_matrix 
     
     contains 
 
@@ -27,6 +27,16 @@ module register
         atom_matrix(8)%name = 'O'
         atom_matrix(9)%name = 'F'
         atom_matrix(10)%name = 'Ne'
+        atom_matrix(11)%name = 'Na'
+        atom_matrix(12)%name = 'Mg'
+        atom_matrix(13)%name = 'Al'
+        atom_matrix(14)%name = 'Si'
+        atom_matrix(15)%name = 'P'
+        atom_matrix(16)%name = 'S'
+        atom_matrix(17)%name = 'Cl'
+        atom_matrix(18)%name = 'Ar'
+        atom_matrix(19)%name = 'K'
+        atom_matrix(20)%name = 'Ca'
 
         do i=1, size(atom_matrix)
             atom_matrix(i)%charge = i * 1.D0

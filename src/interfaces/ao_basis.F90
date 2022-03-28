@@ -5,7 +5,7 @@
 
         integer, parameter, private:: REALD=8 ! default real for this module
 
-        public add_shell_to_basis, clear_basis 
+        public basis_routine_atom, clear_basis 
 
 !       Basis function info:
         type, public:: basis_func_info_t
@@ -42,6 +42,61 @@
           enddo
           ao_basis%nshells = 0
           ao_basis%nao     = 0
+        end subroutine
+
+
+        subroutine basis_routine_atom(charge, cur_coord, ao_basis)
+
+         use molecular_structure
+
+         type(basis_set_info_t)               :: ao_basis
+         real(8), intent(in)                  :: cur_coord(3), charge
+         integer :: l
+         
+         if (charge>18) then
+            call s_orbital(5) !4s
+         end if
+
+         if (charge>12) then
+            call p_orbital(5) !2p
+         end if 
+         
+         if (charge>10) then
+            call s_orbital(4) !3s
+         end if 
+           
+         if (charge>4) then 
+            call p_orbital(4) !1p
+         end if
+         
+         if (charge>2) then 
+            call s_orbital(4) !2s
+         end if
+
+         call s_orbital(3) !1s  
+
+         contains
+
+            subroutine p_orbital(expo)
+               integer, intent(in) :: expo
+               integer :: i
+               l = 1
+
+               !do i = expo, expo+3  !just do it for every p-orbital, three different exponents per p (thus 3x3)
+                  call add_shell_to_basis(ao_basis,l,(cur_coord), expo * 1.D0)
+               !end do  
+            end subroutine
+
+            subroutine s_orbital(expo)
+               integer, intent(in) :: expo
+               integer :: i
+               l = 0
+
+               !do i = expo, expo+3  !just do it for every s-orbital, three different exponents per p (thus 3x3)
+                  call add_shell_to_basis(ao_basis,l,(cur_coord), expo * 1.D0)
+               !end do 
+            end subroutine
+         
         end subroutine
 
         subroutine add_shell_to_basis(ao_basis,angular,coord,alpha,exponents,coefficients)

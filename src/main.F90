@@ -22,7 +22,7 @@ program HartreeFock
      real(8)  :: E_HF
      real(8), allocatable :: F(:,:),V(:,:),T(:,:),S(:,:), C(:,:), eps(:), D(:,:), D_old(:,:), coreH(:,:)
      integer  :: i
-     real     :: converge
+     real     :: converge, change
 
      ! The following large array can be eliminated when Fock matrix contruction is implemented
      real(8), allocatable :: ao_integrals (:,:,:,:)
@@ -87,12 +87,16 @@ program HartreeFock
            D(kappa,lambda) = sum(C(kappa,1:n_occ)*C(lambda,1:n_occ))
         end do
       end do
-     
 
-      if (sum((F*D_old) - (D_old*F)) /= 0) then 
-        print *, 'system converged'
+      change = sum((F*D_old) - (D_old*F))
+
+      print *, 'Change for this convergence is: ', change
+
+      if (abs(change) <= 0.0001) then !set sum to variable, if statement -> print , smaller then change 
+        print *, 'System converged!'
         exit
       end if
+  
      end do 
 
      ! Cint *, Dompute the Hartree-Fock energy (this should be modified, see the notes)
@@ -135,8 +139,8 @@ program HartreeFock
      READ(2,*) !empty lane/not used
 
      do i=1, number_of_atoms
-      READ (2,*) atom_char, coord(1,i), coord(2,i), coord(3,i)
-      print *, 'Read:', atom_char, coord(1,i), coord(2,i), coord(3,i)
+      READ (2,*) atom_char, coord (:,i)
+      print *, 'Read:', atom_char, coord (:,i)
       
       charge(i) = get_charge(atom_char)
       print *, 'Charge allocated: ', charge(i)
@@ -150,29 +154,10 @@ program HartreeFock
      use molecular_structure
      type(basis_set_info_t), intent(inout) :: ao_basis
      type(molecular_structure_t), intent(in) :: molecule
-     type(basis_func_info_t) :: gto
-     real(8) :: cur_coord(3)
-     integer :: i, j, number_of_orbitals, l, exp, orbital_counter
+     integer :: i
 
      do i=1, molecule%num_atoms
-       cur_coord = molecule%coord(:,i)
-       orbital_counter = molecule%charge(i)
-       if (orbital_counter>4) then !has p-orbitals
-         l = 1 
-         j = MOD((orbital_counter - 4),2) !returns number of used/occupied p-orbitals         
-         exp = 4 !WRONG?
-         do while (j>0)
-          call add_shell_to_basis(ao_basis,l,(cur_coord), 4.D0)
-         end do 
-       end if
-
-        l = 0 !s-orbitals
-        if (orbital_counter>2) then !add 2s
-          exp = 4
-          call add_shell_to_basis(ao_basis,l,(cur_coord), 4.D0)
-        end if
-       exp = 1
-       call add_shell_to_basis(ao_basis,l,(cur_coord), 1.D0) !pass coordintates from molecule
+       call basis_routine_atom(molecule%charge(i), molecule%coord(:,i), ao_basis)
      end do
    end subroutine
 
