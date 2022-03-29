@@ -46,7 +46,7 @@
 
 
         subroutine basis_routine_atom(charge, cur_coord, ao_basis)
-         !Contains nested subroutines for the orbitals which can be extended later on
+         !Contains nested subroutines for the orbitals which can be extended later on. Calls the add_shell_to_basis for each orbital now. 
          use molecular_structure
 
          type(basis_set_info_t)               :: ao_basis

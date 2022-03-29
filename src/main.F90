@@ -2,6 +2,7 @@ program HartreeFock
 
    ! Demonstration program that can be used as a starting point
    ! Lucas Visscher, March 2022
+   ! Forked by: Mac Veldhuizen, March 2022
 
    use molecular_structure
    use ao_basis
@@ -88,8 +89,7 @@ program HartreeFock
         end do
       end do
 
-      change = sum((F*D_old) - (D_old*F))
-
+      change = abs(sum((F*D_old) - (D_old*F)))
       print *, 'Change for this convergence is: ', change
 
       if (abs(change) <= 0.0001) then !set sum to variable, if statement -> print , smaller then change 

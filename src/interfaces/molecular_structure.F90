@@ -46,7 +46,6 @@
           allocate (molecule%coord(3,num_atoms_new))
           molecule%charge = charge_new
           molecule%coord  = coord_new
-
           
           ! set number of atoms
           molecule%num_atoms = molecule%num_atoms + num_atoms_new
@@ -62,5 +61,6 @@
     	    
          get_n_occ = sum(molecule%charge(:))/2
         end function
+        
        end module molecular_structure
 

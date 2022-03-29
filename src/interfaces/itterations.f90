@@ -17,6 +17,5 @@ module Itterations
              F = coreH + (((2.D0 * ao_integrals(:,:,mu,nu)) - ao_integrals(:,nu,mu,:)) * D)
           end do   
         end do
-       
     end subroutine 
 end 
