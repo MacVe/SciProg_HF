@@ -35,7 +35,7 @@ program HartreeFock
      n_AO = ao_basis%nao
    
      ! Definition of the number of occupied orbitals
-     n_occ = 3 ! hardwired for this demonstration program, should be set via input
+     n_occ = get_n_occ(molecule)
 
      ! Compute the overlap matrix
      allocate (S(n_AO,n_AO))
@@ -96,7 +96,6 @@ program HartreeFock
         print *, 'System converged!'
         exit
       end if
-  
      end do 
 
      ! Cint *, Dompute the Hartree-Fock energy (this should be modified, see the notes)
@@ -110,18 +109,16 @@ program HartreeFock
        end do
      end do
    
+     print*, ''
      print*, "The Hartree-Fock energy:    ", E_HF
    end
 
    subroutine define_molecule(molecule)
-     ! This routine should be improved such that an arbitrary molecule can be given as input
-     ! the coordinates below are for a be-he dimer oriented along the x-axis with a bond length of 2 au
      use molecular_structure
      use register
 
      type(molecular_structure_t), intent(inout) :: molecule
      real(8), ALLOCATABLE :: charge(:), coord(:,:)
-     real :: coor_x, coor_y, coor_z
      integer :: number_of_atoms, i
      character(2) :: atom_char
 

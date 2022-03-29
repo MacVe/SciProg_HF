@@ -46,30 +46,26 @@
 
 
         subroutine basis_routine_atom(charge, cur_coord, ao_basis)
-
+         !Contains nested subroutines for the orbitals which can be extended later on
          use molecular_structure
 
          type(basis_set_info_t)               :: ao_basis
          real(8), intent(in)                  :: cur_coord(3), charge
-         integer :: l
+         integer :: l, i
          
          if (charge>18) then
             call s_orbital(5) !4s
-         end if
 
-         if (charge>12) then
+         else if (charge>12) then
             call p_orbital(5) !2p
-         end if 
          
-         if (charge>10) then
+         else if (charge>10) then
             call s_orbital(4) !3s
-         end if 
-           
-         if (charge>4) then 
+      
+         else if (charge>4) then 
             call p_orbital(4) !1p
-         end if
          
-         if (charge>2) then 
+         else if (charge>2) then 
             call s_orbital(4) !2s
          end if
 
@@ -79,7 +75,6 @@
 
             subroutine p_orbital(expo)
                integer, intent(in) :: expo
-               integer :: i
                l = 1
 
                !do i = expo, expo+3  !just do it for every p-orbital, three different exponents per p (thus 3x3)
@@ -89,7 +84,6 @@
 
             subroutine s_orbital(expo)
                integer, intent(in) :: expo
-               integer :: i
                l = 0
 
                !do i = expo, expo+3  !just do it for every s-orbital, three different exponents per p (thus 3x3)

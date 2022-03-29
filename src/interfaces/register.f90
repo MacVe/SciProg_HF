@@ -7,7 +7,6 @@ module register
     type :: atom_data
         character(2) :: name 
         real(8) :: charge
-        integer :: s_orbital_e, p_orbital_e
     end type 
 
     type(atom_data), DIMENSION(20) :: atom_matrix 
@@ -40,14 +39,6 @@ module register
 
         do i=1, size(atom_matrix)
             atom_matrix(i)%charge = i * 1.D0
-
-            if (i<4) then
-                atom_matrix(i)%s_orbital_e = i
-                atom_matrix(i)%p_orbital_e = 0
-            else if (i>4) then
-                atom_matrix(i)%s_orbital_e = 4
-                atom_matrix(i)%p_orbital_e = i-4
-            end if
         end do     
     end subroutine
 

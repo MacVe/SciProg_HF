@@ -4,7 +4,7 @@
         implicit none
         private
 
-        public add_atoms_to_molecule
+        public add_atoms_to_molecule, get_n_occ
         integer, parameter, private:: REALD=8 ! default real for this module
 
 !       Molecule:
@@ -57,5 +57,10 @@
 
         end subroutine
 
+        integer function get_n_occ(molecule)
+         type(molecular_structure_t), intent(inout) :: molecule
+    	    
+         get_n_occ = sum(molecule%charge(:))/2
+        end function
        end module molecular_structure
 
