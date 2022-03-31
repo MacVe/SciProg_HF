@@ -98,10 +98,8 @@ program HartreeFock
       end if
      end do 
 
-     ! Cint *, Dompute the Hartree-Fock energy (this should be modified, see the notes)
      E_HF = 2.D0 * sum(coreH*D)     
-     ! Compute all 2-electron integrals
-     !call generate_2int (ao_basis,ao_integrals)
+     
      do lambda = 1, n_ao
         do kappa = 1, n_ao
            E_HF = E_HF + 2.D0 *  D(kappa,lambda) * sum(D*ao_integrals(:,:,kappa,lambda))

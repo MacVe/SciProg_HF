@@ -46,49 +46,30 @@
 
 
         subroutine basis_routine_atom(charge, cur_coord, ao_basis)
-         !Contains nested subroutines for the orbitals which can be extended later on. Calls the add_shell_to_basis for each orbital now. 
+         !Contains nested subroutines for the orbitals which can be extended later on
          use molecular_structure
 
          type(basis_set_info_t)               :: ao_basis
          real(8), intent(in)                  :: cur_coord(3), charge
-         integer :: l, i
+         integer :: i
          
-         if (charge>18) then
-            call s_orbital(5) !4s
-
-         else if (charge>12) then
-            call p_orbital(5) !2p
+          if (charge>4) then
+            call add_orbital(0.4, 1.8, 1) !p-orbital
+          end if
          
-         else if (charge>10) then
-            call s_orbital(4) !3s
-      
-         else if (charge>4) then 
-            call p_orbital(4) !1p
-         
-         else if (charge>2) then 
-            call s_orbital(4) !2s
-         end if
+          call add_orbital(0.3, 1.5, 0) !s-orbital
 
-         call s_orbital(3) !1s  
+          contains
 
-         contains
-
-            subroutine p_orbital(expo)
-               integer, intent(in) :: expo
-               l = 1
-
-               !do i = expo, expo+3  !just do it for every p-orbital, three different exponents per p (thus 3x3)
-                  call add_shell_to_basis(ao_basis,l,(cur_coord), expo * 1.D0)
-               !end do  
-            end subroutine
-
-            subroutine s_orbital(expo)
-               integer, intent(in) :: expo
-               l = 0
-
-               !do i = expo, expo+3  !just do it for every s-orbital, three different exponents per p (thus 3x3)
-                  call add_shell_to_basis(ao_basis,l,(cur_coord), expo * 1.D0)
-               !end do 
+            subroutine add_orbital(expo, scale, l)
+               integer, intent(in) :: l
+               real, intent(in)    :: expo, scale
+               real :: factor
+                
+               do i = 1, 3
+                  factor = expo * scale * i
+                  call add_shell_to_basis(ao_basis,l,(cur_coord), factor * 1.D0)
+               end do  
             end subroutine
          
         end subroutine

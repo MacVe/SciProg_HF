@@ -1,2 +1,18 @@
 Auxilliary modules to interface to gen1int, interest, lapack and to define a simple molecule type
 written by Lucas Visscher, Vrije Universiteit Amsterdam, March 2022
+Code edited by Mac Veldhuizen (student), to make it a more flexible code allowing for gaussian coordinates as inputMolecule
+
+Main contains the intialisation of the process, as also the loop for itterations and the final output.
+
+Intialisation 
+call define_molecule
+    Takes the inputMolecule.txt as a input and reads the molecule out and sets it in the system
+    Sets it in ADT molecule in interfaces/molecular_structure.f90
+call define_basis
+    Takes the data from type(molecule), and sets the required amount of shells in the interfaces/oa_basis.f90
+
+Process
+    Uses a standard HF algorithm to solve the Hamiltonian
+
+Final
+    Calculates the energy for the HF
