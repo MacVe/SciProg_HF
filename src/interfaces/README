@@ -1,18 +1,62 @@
 Auxilliary modules to interface to gen1int, interest, lapack and to define a simple molecule type
 written by Lucas Visscher, Vrije Universiteit Amsterdam, March 2022
-Code edited by Mac Veldhuizen (student), to make it a more flexible code allowing for gaussian coordinates as inputMolecule
+Code edited by Mac Veldhuizen (student), to make it a more flexible code allowing for gaussian coordinates as inputMolecule with AU
+
+On running: run by opening myapp
+On compiling: use the make file
 
 Main contains the intialisation of the process, as also the loop for itterations and the final output.
 
+_________main.f90_________
+
 Intialisation 
 call define_molecule
-    Takes the inputMolecule.txt as a input and reads the molecule out and sets it in the system
+    Takes the inputMolecule.txt as a input and reads the molecule out and sets it in the system. Uses register.f90 to allocate the atom type and its charge. 
     Sets it in ADT molecule in interfaces/molecular_structure.f90
 call define_basis
     Takes the data from type(molecule), and sets the required amount of shells in the interfaces/oa_basis.f90
 
 Process
     Uses a standard HF algorithm to solve the Hamiltonian
+    1. Set up the core Hamiltonian - coreH(:,:) from overlap - S(:,:), kinetic - T(:,:), potential V(:,:) matrixes
+    2. Use the diagonalization of the fock matrix - F(:,:) (call solve_genev in diagonalization.f90) to calculate the desity - D(:,:) matrix
+    - Start loop/itterations
+    3. Calculate the fock matrix - F(:,:) (call give_Fmatrix in itterations.f90)
+    4. Diagonalization of the fock matrix (call solve_genev)
+    5. Calculate new density matrix - D(:,:)
+    6. Check convergence (F*D_old) - (D_old*F)
+        If not converged go to 3
 
 Final
-    Calculates the energy for the HF
+    Calculates the energy for the HF using;
+        core hamiltonian, density matrix, atomic oribital intergrals
+
+
+________oa_basis.f90_________
+Uses the read input to setup the basisfunctions. Contains the type(basis_set_info_t) and type(basis_func_info_t) in which the data for the basis sets is stored
+
+Subroutine basis_routine_atom is called for each read atoms needs (charge, cur_coord, ao_basis) for which oa_basis is the total basis set. The function determines the required orbitals and uses it for determining the amount of shells
+
+Subroutine add_shell_to_basis is called in for each basis set in basis_routine_atom
+
+
+________diagonalization.f90_________
+Contains the needed checks for using DSYEV which does the diagonalization
+
+
+________ittertations.f90_________
+Only contains a function for the making of a fock matrix
+
+
+_________molecular_structure.f90_________
+Contains the data for the whole molecule. Has type(molecular_structure_t)
+         integer                  :: num_atoms=0  ! number of atoms
+         real(REALD), allocatable :: charge(:)    ! nuclear charges
+         real(REALD), allocatable :: coord(:,:)   ! coordinates of the atoms
+
+
+_________register.f90_________
+Contains a list with a type(atom_data). Used when reading the type of molecule to allocate charge and name. 
+         character(2) :: name 
+         real(8)      :: charge
+
