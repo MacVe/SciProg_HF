@@ -79,23 +79,25 @@ program HartreeFock
      do i = 1, 100     
       call give_Fmatrix(ao_integrals, coreH, D, n_AO, F)
    
-      call solve_genev (F,S,C,eps)
-  
+      call solve_genev (F,S,C,eps)    
+      
       D_old = D
 
       do lambda = 1, n_ao
         do kappa = 1, n_ao
            D(kappa,lambda) = sum(C(kappa,1:n_occ)*C(lambda,1:n_occ))
         end do
-      end do
+      end do   
 
-      change = abs(sum((F*D_old) - (D_old*F)))
-      print *, 'Change for this convergence is: ', change
+      answer = abs(sum(D - D_old))
 
-      if (abs(change) <= 0.0001) then !set sum to variable, if statement -> print , smaller then change 
+      if (abs(answer - prev_answer) <= 0.0001) then !set sum to variable, if statement -> print , smaller then change 
         print *, 'System converged!'
         exit
       end if
+
+      print *, 'Change for this convergence is: ', abs(answer - prev_answer)
+      prev_answer = answer
      end do 
 
      E_HF = 2.D0 * sum(coreH*D)     
