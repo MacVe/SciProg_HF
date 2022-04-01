@@ -20,10 +20,10 @@ program HartreeFock
      ! Variable naming as in the description of the exercise
      integer  :: n_AO, n_occ
      integer  :: kappa, lambda
-     real(8)  :: E_HF
+     real(8)  :: E_HF, answer, prev_answer
      real(8), allocatable :: F(:,:),V(:,:),T(:,:),S(:,:), C(:,:), eps(:), D(:,:), D_old(:,:), coreH(:,:)
      integer  :: i
-     real     :: converge, change
+     real     :: converge
 
      ! The following large array can be eliminated when Fock matrix contruction is implemented
      real(8), allocatable :: ao_integrals (:,:,:,:)
@@ -75,6 +75,9 @@ program HartreeFock
      ALLOCATE(ao_integrals(n_AO,n_AO,n_AO,n_AO))
 
      call generate_2int(ao_basis,ao_integrals)
+     
+     answer = 0
+     prev_answer = 0
 
      do i = 1, 100     
       call give_Fmatrix(ao_integrals, coreH, D, n_AO, F)
@@ -91,12 +94,12 @@ program HartreeFock
 
       answer = abs(sum(D - D_old))
 
+      print *, 'Change for this convergence is: ', abs(answer - prev_answer)
       if (abs(answer - prev_answer) <= 0.0001) then !set sum to variable, if statement -> print , smaller then change 
         print *, 'System converged!'
         exit
       end if
 
-      print *, 'Change for this convergence is: ', abs(answer - prev_answer)
       prev_answer = answer
      end do 
 
